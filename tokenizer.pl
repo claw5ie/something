@@ -86,7 +86,7 @@ tokenize_aux(['&' | Rest], [and | X]) :-
 tokenize_aux(['|' | Rest], [or | X]) :-
     tokenize_aux(Rest, X).
 
-tokenize_aux([Digit | Rest], [Int | X]) :-
+tokenize_aux([Digit | Rest], [integer(Int) | X]) :-
     is_digit(Digit),
     take_while(is_digit, Rest, Digits, Other),
     number_chars(Int, [Digit | Digits]),
@@ -97,7 +97,7 @@ tokenize_aux([Alpha | Rest], [identifier([Alpha | Alphas]) | X]) :-
     take_while(is_alpha, Rest, Alphas, Other),
     tokenize_aux(Other, X).
 
-tokenize_aux([], []).
+tokenize_aux([], [end_of_file]).
 
 take_while(is_digit, [Elem | List], [Elem | Consumed], Rest) :-
     is_digit(Elem), !, take_while(is_digit, List, Consumed, Rest).
