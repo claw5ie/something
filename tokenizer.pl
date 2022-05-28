@@ -7,23 +7,9 @@ tokenize_aux([' ' | Rest], X) :-
 
 tokenize_aux(['i', 'f' | Rest], [if | X]) :-
     tokenize_aux(Rest, X).
-tokenize_aux(['t', 'o' | Rest], [to | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['d', 'o' | Rest], [do | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['e', 'n', 'd' | Rest], [end | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['i', 'n' | Rest], [in | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['o', 'f' | Rest], [of | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['f', 'u', 'n', 'c', 't', 'i', 'o', 'n' | Rest], [function | X]) :-
+tokenize_aux(['f', 'u', 'n' | Rest], [defun | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['l', 'e', 't' | Rest], [let | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['v', 'a', 'r' | Rest], [var | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['t', 'h', 'e', 'n' | Rest], [then | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['w', 'h', 'i', 'l', 'e' | Rest], [while | X]) :-
     tokenize_aux(Rest, X).
@@ -33,19 +19,21 @@ tokenize_aux(['e', 'l', 's', 'e' | Rest], [else | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['f', 'o', 'r' | Rest], [for | X]) :-
     tokenize_aux(Rest, X).
+tokenize_aux(['r', 'e', 't', 'u', 'r', 'n' | Rest], [return | X]) :-
+    tokenize_aux(Rest, X).
 
-tokenize_aux(['i', 'n', 't', 'A', 'r', 'r', 'a', 'y' | Rest], [int_array | X]) :-
+tokenize_aux(['V', 'o', 'i', 'd' | Rest], [void_type | X]) :-
     tokenize_aux(Rest, X).
-tokenize_aux(['i', 'n', 't' | Rest], [int | X]) :-
+tokenize_aux(['I', 'n', 't' | Rest], [int_type | X]) :-
     tokenize_aux(Rest, X).
-tokenize_aux(['s', 't', 'r', 'i', 'n', 'g' | Rest], [string | X]) :-
+tokenize_aux(['S', 't', 'r', 'i', 'n', 'g' | Rest], [string_type | X]) :-
     tokenize_aux(Rest, X).
 
 tokenize_aux([':', '=' | Rest], [assign | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['<', '=' | Rest], [less_equal | X]) :-
     tokenize_aux(Rest, X).
-tokenize_aux(['<', '>' | Rest], [different | X]) :-
+tokenize_aux(['!', '=' | Rest], [different | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['>', '=' | Rest], [greater_equal | X]) :-
     tokenize_aux(Rest, X).
@@ -99,12 +87,11 @@ tokenize_aux([Alpha | Rest], [identifier([Alpha | Alphas]) | X]) :-
 
 tokenize_aux([], [end_of_file]).
 
-take_while(is_digit, [Elem | List], [Elem | Consumed], Rest) :-
-    is_digit(Elem), !, take_while(is_digit, List, Consumed, Rest).
-take_while(is_alpha, [Elem | List], [Elem | Consumed], Rest) :-
-    is_alpha(Elem), !, take_while(is_alpha, List, Consumed, Rest).
+take_while(Cond, [Elem | List], [Elem | Consumed], Rest) :-
+    call(Cond, Elem), !, take_while(Cond, List, Consumed, Rest).
+
 take_while(_, Rest, [], Rest).
 
 to_integer(X, Int, Rest) :-
-    take_while(take_digits, X, Y, Rest),
+    take_while(is_digit, X, Y, Rest),
     number_chars(Int, Y).
