@@ -1,8 +1,6 @@
 :- module(parser, [parse/2]).
 
-parse(String, Ast) :-
-    tokenize(String, Tokens),
-    parse_top_level(Tokens, [], Ast).
+parse(Tokens, Ast) :- parse_top_level(Tokens, [], Ast).
 
 parse_top_level([defun | Tokens], Rest, [Defun | Ast]) :-
     parse_defun(Tokens, Tokens0, Defun),

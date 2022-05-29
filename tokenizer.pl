@@ -2,7 +2,8 @@
 
 tokenize(Source, X) :- string_chars(Source, Chars), tokenize_aux(Chars, X).
 
-tokenize_aux([' ' | Rest], X) :-
+tokenize_aux([Char | Rest], X) :-
+    is_space(Char),
     tokenize_aux(Rest, X).
 
 tokenize_aux(['i', 'f' | Rest], [if | X]) :-
