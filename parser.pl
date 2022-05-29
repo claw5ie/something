@@ -41,6 +41,10 @@ parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
 parse_level(6, [integer(Int) | Rest], Rest, integer(Int)).
 
 parse_level(
+    6, [identifier(Id), lparen, rparen | Rest], Rest, fun_call(Id, [])
+).
+
+parse_level(
     6, [identifier(Id), lparen | Tokens], Rest, fun_call(Id, Args)
 ) :-
     parse_expr_list(Tokens, [rparen | Rest], Args).
