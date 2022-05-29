@@ -87,7 +87,7 @@ parse_body(Tokens, Rest, [VarDef | Body]) :-
     parse_vardef(Tokens, Tokens1, VarDef),
     parse_body(Tokens1, Rest, Body).
 
-parse_body(Tokens, Rest, [Expr | Body]) :-
+parse_body(Tokens, Rest, [expr(Expr) | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens1], Expr),
     parse_body(Tokens1, Rest, Body).
 
