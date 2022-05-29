@@ -49,12 +49,10 @@ fold_exprs(_, Rest, Left, Rest, Left).
 
 parse_expr_list(Tokens, Rest, [Expr | ExprList]) :-
     parse_expr(Tokens, Tokens0, Expr),
-    parse_rest_expr_list(Tokens0, Rest, ExprList).
+    consume_or_ignore(comma, Tokens0, Tokens1),
+    parse_expr_list(Tokens1, Rest, ExprList).
 
-parse_rest_expr_list([comma | Tokens], Rest, ExprList) :-
-    parse_expr_list(Tokens, Rest, ExprList).
-
-parse_rest_expr_list(Rest, Rest, []).
+parse_expr_list(Rest, Rest, []).
 
 parse_body([defun | Tokens], Rest, [FunDef | Statements]) :-
     parse_defun(Tokens, Tokens0, FunDef),
@@ -96,9 +94,9 @@ parse_rest_vardef([equal | Tokens], Rest, Expr) :-
     parse_expr(Tokens, [semicolon | Rest], Expr).
 
 parse_defun(
-    [identifier(Id), lparen | Tokens], Rest, defun(Type, Id, Args, Body)
+    [identifier(Id), lparen | Tokens], Rest, defun(Type, Id, Params, Body)
 ) :-
-    parse_param_list(Tokens, [rparen, colon, Type | Tokens0], Args),
+    parse_param_list(Tokens, [rparen, colon, Type | Tokens0], Params),
     is_valid_type(Type),
     parse_body(Tokens0, Rest, Body).
 
@@ -106,14 +104,10 @@ parse_param_list(
     [identifier(Id), colon, Type | Tokens], Rest, [param(Type, Id) | Params]
 ) :-
     type_is_non_void(Type),
-    parse_rest_param_list(Tokens, Rest, Params).
+    consume_or_ignore(comma, Tokens, Tokens0),
+    parse_param_list(Tokens0, Rest, Params).
 
 parse_param_list(Rest, Rest, []).
-
-parse_rest_param_list([comma | Tokens], Rest, Params) :-
-    parse_param_list(Tokens, Rest, Params).
-
-parse_rest_param_list(Rest, Rest, []).
 
 parse_if(Tokens, Rest, if(Cond, IfTrue, IfFalse)) :-
     parse_expr(Tokens, [colon | Tokens1], Cond),
@@ -128,6 +122,9 @@ parse_else(Rest, Rest, []).
 parse_while(Tokens, Rest, while(Cond, Body)) :-
     parse_expr(Tokens, [colon | Tokens1], Cond),
     parse_body(Tokens1, Rest, Body).
+
+consume_or_ignore(Token, [Token | Rest], Rest).
+consume_or_ignore(_, Rest, Rest).
 
 type_is_non_void(Type) :- Type \= void_type, is_valid_type(Type).
 
