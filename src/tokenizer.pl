@@ -1,101 +1,74 @@
 :- module(tokenizer, [tokenize/2]).
 
-tokenize(Source, X) :- string_chars(Source, Chars), tokenize_aux(Chars, X).
+:- use_module(utils).
 
-tokenize_aux([Char | Rest], X) :-
+tokenize(Source, Tokens) :-
+    string_chars(Source, Chars),
+    possible_token_strings(TokenStrings),
+    tokenize(TokenStrings, Chars, Tokens).
+
+tokenize(TokenStrings, [Char | Chars], Tokens) :-
     is_space(Char),
-    tokenize_aux(Rest, X).
+    tokenize(TokenStrings, Chars, Tokens).
 
-tokenize_aux(['i', 'f' | Rest], [if | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['f', 'u', 'n' | Rest], [defun | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['l', 'e', 't' | Rest], [let | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['w', 'h', 'i', 'l', 'e' | Rest], [while | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['b', 'r', 'e', 'a', 'k' | Rest], [break | X]) :-
-    !, tokenize_aux(Rest, X).
-tokenize_aux(['e', 'l', 's', 'e' | Rest], [else | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['f', 'o', 'r' | Rest], [for | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['r', 'e', 't', 'u', 'r', 'n' | Rest], [return | X]) :-
-    tokenize_aux(Rest, X).
+tokenize(TokenStrings, Chars, [Token | Tokens]) :-
+    find_token(TokenStrings, Chars, Token, Rest),
+    !,
+    tokenize(TokenStrings, Rest, Tokens).
 
-tokenize_aux(['V', 'o', 'i', 'd' | Rest], [void_type | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['I', 'n', 't' | Rest], [int_type | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['S', 't', 'r', 'i', 'n', 'g' | Rest], [string_type | X]) :-
-    tokenize_aux(Rest, X).
-
-tokenize_aux([':', '=' | Rest], [assign | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['<', '=' | Rest], [less_equal | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['!', '=' | Rest], [different | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['>', '=' | Rest], [greater_equal | X]) :-
-    tokenize_aux(Rest, X).
-
-tokenize_aux(['(' | Rest], [lparen | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux([')' | Rest], [rparen | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['[' | Rest], [lbrace | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux([']' | Rest], [rbrace | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux([',' | Rest], [comma | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux([';' | Rest], [semicolon | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux([':' | Rest], [colon | X]) :-
-    tokenize_aux(Rest, X).
-
-tokenize_aux(['+' | Rest], [plus | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['-' | Rest], [minus | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['*' | Rest], [multiply | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['/' | Rest], [divide | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['%' | Rest], [modulus | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['=' | Rest], [equal | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['<' | Rest], [less | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['>' | Rest], [greater | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['&' | Rest], [and | X]) :-
-    tokenize_aux(Rest, X).
-tokenize_aux(['|' | Rest], [or | X]) :-
-    tokenize_aux(Rest, X).
-
-tokenize_aux([Digit | Rest], [integer(Int) | X]) :-
+tokenize(TokenStrings, [Digit | Chars], [integer(Integer) | Tokens]) :-
     is_digit(Digit),
-    take_while(is_digit, Rest, Digits, Other),
-    number_chars(Int, [Digit | Digits]),
-    tokenize_aux(Other, X).
+    take_while(is_digit, Chars, Rest, Digits),
+    number_chars(Integer, [Digit | Digits]),
+    tokenize(TokenStrings, Rest, Tokens).
 
-tokenize_aux([Alpha | Rest], [identifier([Alpha | Alphas]) | X]) :-
+tokenize(TokenStrings, [Alpha | Chars], [identifier([Alpha | Alphas]) | Tokens]) :-
     is_alpha(Alpha),
-    take_while(is_alnum_or_underscore, Rest, Alphas, Other),
-    tokenize_aux(Other, X).
+    take_while(tokenizer:is_alnum_or_underscore, Chars, Rest, Alphas),
+    tokenize(TokenStrings, Rest, Tokens).
 
-tokenize_aux([], [end_of_file]).
+tokenize(_, [], [end_of_file]).
 
-take_while(Cond, [Elem | List], [Elem | Consumed], Rest) :-
-    call(Cond, Elem), !, take_while(Cond, List, Consumed, Rest).
+possible_token_strings(
+    [
+        pair(['r', 'e', 't', 'u', 'r', 'n'], return),
+        pair(['b', 'r', 'e', 'a', 'k'], break),
+        pair(['w', 'h', 'i', 'l', 'e'], while),
+        pair(['e', 'l', 's', 'e'], else),
+        pair(['V', 'o', 'i', 'd'], void_type),
+        pair(['f', 'o', 'r'], for), %% unhandeled for now
+        pair(['f', 'u', 'n'], fun),
+        pair(['I', 'n', 't'], int_type),
+        pair(['i', 'f'], if),
+        pair([':', '='], assign), %% unhandeled for now
+        pair(['<', '='], less_equal),
+        pair(['>', '='], greater_equal),
+        pair(['!', '='], different),
+        pair(['('], open_paren),
+        pair([')'], close_paren),
+        pair(['['], open_bracket), %% unhandeled for now
+        pair([']'], close_bracket), %% unhandeled for now
+        pair([','], comma),
+        pair([':'], colon),
+        pair([';'], semicolon),
+        pair(['|'], or),
+        pair(['&'], and),
+        pair(['='], equal),
+        pair(['<'], less),
+        pair(['>'], greater),
+        pair(['+'], plus),
+        pair(['-'], minus),
+        pair(['*'], multiply),
+        pair(['/'], divide),
+        pair(['%'], modulus)
+    ]
+).
 
-take_while(_, Rest, [], Rest).
+find_token([pair(TokenString, Token) | _], String, Token, Rest) :-
+    is_prefix(TokenString, String, Rest).
 
-to_integer(X, Int, Rest) :-
-    take_while(is_digit, X, Y, Rest),
-    number_chars(Int, Y).
+find_token([_ | TokenStrings], String, Token, Rest) :-
+    find_token(TokenStrings, String, Token, Rest).
 
 is_alnum_or_underscore(X) :- is_alnum(X).
 is_alnum_or_underscore('_').

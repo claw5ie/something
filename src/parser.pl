@@ -2,7 +2,7 @@
 
 parse(Tokens, Ast) :- parse_top_level(Tokens, [], Ast).
 
-parse_top_level([defun | Tokens], Rest, [Defun | Ast]) :-
+parse_top_level([fun | Tokens], Rest, [Defun | Ast]) :-
     parse_defun(Tokens, Tokens0, Defun),
     parse_top_level(Tokens0, Rest, Ast).
 
@@ -30,8 +30,8 @@ parse_level(Level, Tokens, Rest, Ast) :-
     parse_level(NextLevel, Tokens, Tokens0, Left),
     fold_exprs(Level, Tokens0, Left, Rest, Ast).
 
-parse_level(6, [lparen | Tokens], Rest, Ast) :-
-    parse_expr(Tokens, [rparen | Rest], Ast).
+parse_level(6, [open_paren | Tokens], Rest, Ast) :-
+    parse_expr(Tokens, [close_paren | Rest], Ast).
 
 parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
     parse_expr(Tokens, Rest, Ast).
@@ -39,13 +39,13 @@ parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
 parse_level(6, [integer(Int) | Rest], Rest, integer(Int)).
 
 parse_level(
-    6, [identifier(Id), lparen, rparen | Rest], Rest, fun_call(Id, [])
+    6, [identifier(Id), open_paren, close_paren | Rest], Rest, fun_call(Id, [])
 ).
 
 parse_level(
-    6, [identifier(Id), lparen | Tokens], Rest, fun_call(Id, Args)
+    6, [identifier(Id), open_paren | Tokens], Rest, fun_call(Id, Args)
 ) :-
-    parse_expr_list(Tokens, [rparen | Rest], Args).
+    parse_expr_list(Tokens, [close_paren | Rest], Args).
 
 parse_level(6, [identifier(Id) | Rest], Rest, identifier(Id)).
 
@@ -65,7 +65,7 @@ parse_expr_list(Tokens, Rest, [Expr | ExprList]) :-
 
 parse_expr_list(Rest, Rest, []).
 
-parse_body([defun | Tokens], Rest, [FunDef | Statements]) :-
+parse_body([fun | Tokens], Rest, [FunDef | Statements]) :-
     parse_defun(Tokens, Tokens0, FunDef),
     parse_body(Tokens0, Rest, Statements).
 
@@ -113,9 +113,9 @@ parse_vardef(
     parse_expr(Tokens, [semicolon | Rest], Expr).
 
 parse_defun(
-    [identifier(Id), lparen | Tokens], Rest, defun(Type, Id, Params, Body)
+    [identifier(Id), open_paren | Tokens], Rest, defun(Type, Id, Params, Body)
 ) :-
-    parse_param_list(Tokens, [rparen, colon, Type | Tokens0], Params),
+    parse_param_list(Tokens, [close_paren, colon, Type | Tokens0], Params),
     is_valid_type(Type),
     parse_body(Tokens0, Rest, Body).
 
