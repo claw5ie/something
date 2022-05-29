@@ -14,7 +14,7 @@ tokenize_aux(['l', 'e', 't' | Rest], [let | X]) :-
 tokenize_aux(['w', 'h', 'i', 'l', 'e' | Rest], [while | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['b', 'r', 'e', 'a', 'k' | Rest], [break | X]) :-
-    tokenize_aux(Rest, X).
+    !, tokenize_aux(Rest, X).
 tokenize_aux(['e', 'l', 's', 'e' | Rest], [else | X]) :-
     tokenize_aux(Rest, X).
 tokenize_aux(['f', 'o', 'r' | Rest], [for | X]) :-
