@@ -69,7 +69,7 @@ parse_body([defun | Tokens], Rest, [FunDef | Statements]) :-
 
 parse_body([return | Tokens], Rest, [Expr | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens0], Expr),
-    fold_body(Tokens0, Rest, Body).
+    parse_body(Tokens0, Rest, Body).
 
 parse_body([if | Tokens], Rest, [If | Body]) :-
     parse_if(Tokens, Tokens0, If),
