@@ -15,7 +15,16 @@ parse_top_level([identifier(Id) | Tokens], Rest, [VarDef | Ast]) :-
 parse_top_level([end_of_file], [], []).
 
 parse_expr(Tokens, Rest, Expr) :-
-    parse_level(0, Tokens, Rest, Expr).
+    parse_level(0, Tokens, Tokens0, PossibleCond),
+    parse_inline_if(Tokens0, Rest, PossibleCond, Expr).
+
+parse_inline_if(
+    [if, colon | Tokens], Rest, Cond, inline_if(Cond, IfTrue, IfFalse)
+) :-
+    parse_expr(Tokens, [else | Tokens0], IfTrue),
+    parse_expr(Tokens0, Rest, IfFalse).
+
+parse_inline_if(Rest, Rest, Cond, Cond).
 
 parse_level(Level, Tokens, Rest, Ast) :-
     Level < 6,
