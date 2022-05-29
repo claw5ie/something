@@ -79,6 +79,9 @@ parse_body([while | Tokens], Rest, [While | Body]) :-
     parse_while(Tokens, Tokens0, While),
     parse_body(Tokens0, Rest, Body).
 
+parse_body([break, semicolon | Tokens], Rest, [break | Body]) :-
+    parse_body(Tokens, Rest, Body).
+
 parse_body([else | Rest], [else | Rest], []).
 
 parse_body([semicolon | Rest], Rest, []).
