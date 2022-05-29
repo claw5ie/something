@@ -67,7 +67,10 @@ parse_body([defun | Tokens], Rest, [FunDef | Statements]) :-
     parse_defun(Tokens, Tokens0, FunDef),
     parse_body(Tokens0, Rest, Statements).
 
-parse_body([return | Tokens], Rest, [Expr | Body]) :-
+parse_body([return, semicolon | Tokens], Rest, [return() | Body]) :-
+    parse_body(Tokens, Rest, Body).
+
+parse_body([return | Tokens], Rest, [return(Expr) | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens0], Expr),
     parse_body(Tokens0, Rest, Body).
 
