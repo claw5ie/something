@@ -82,7 +82,7 @@ tokenize_aux([Digit | Rest], [integer(Int) | X]) :-
 
 tokenize_aux([Alpha | Rest], [identifier([Alpha | Alphas]) | X]) :-
     is_alpha(Alpha),
-    take_while(is_alpha, Rest, Alphas, Other),
+    take_while(is_alnum_or_underscore, Rest, Alphas, Other),
     tokenize_aux(Other, X).
 
 tokenize_aux([], [end_of_file]).
@@ -95,3 +95,6 @@ take_while(_, Rest, [], Rest).
 to_integer(X, Int, Rest) :-
     take_while(is_digit, X, Y, Rest),
     number_chars(Int, Y).
+
+is_alnum_or_underscore(X) :- is_alnum(X).
+is_alnum_or_underscore('_').
