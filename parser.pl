@@ -92,14 +92,16 @@ parse_body(Tokens, Rest, [expr(Expr) | Body]) :-
     parse_body(Tokens1, Rest, Body).
 
 parse_vardef(
-    [identifier(Id), colon, Type | Tokens], Rest, vardef(Type, Id, Expr)
+    [identifier(Id), colon, Type, semicolon | Rest],
+    Rest,
+    vardef(Type, Id)
+) :-
+    type_is_non_void(Type).
+
+parse_vardef(
+    [identifier(Id), colon, Type, equal | Tokens], Rest, vardef(Type, Id, Expr)
 ) :-
     type_is_non_void(Type),
-    parse_rest_vardef(Tokens, Rest, Expr).
-
-parse_rest_vardef([semicolon | Rest], Rest, uninitialized).
-
-parse_rest_vardef([equal | Tokens], Rest, Expr) :-
     parse_expr(Tokens, [semicolon | Rest], Expr).
 
 parse_defun(
