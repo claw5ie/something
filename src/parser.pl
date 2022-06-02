@@ -76,6 +76,10 @@ parse_body([return | Tokens], Rest, [return(Expr) | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens0], Expr),
     parse_body(Tokens0, Rest, Body).
 
+parse_body([identifier(Id), assign | Tokens], Rest, [assign(Id, Expr) | Body]) :-
+    parse_expr(Tokens, [semicolon | Tokens0], Expr),
+    parse_body(Tokens0, Rest, Body).
+
 parse_body([if | Tokens], Rest, [If | Body]) :-
     parse_if(Tokens, Tokens0, If),
     parse_body(Tokens0, Rest, Body).

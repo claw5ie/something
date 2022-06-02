@@ -61,6 +61,10 @@ typecheck(Flags, Enviroment, inline_if(Cond, IfTrue, IfFalse), Type) :-
     typecheck(Flags, Enviroment, IfTrue, Type),
     typecheck(Flags, Enviroment, IfFalse, Type).
 
+typecheck(Flags, Enviroment, assign(Id, Expr), void_type) :-
+    get_assoc(Id, Enviroment, var_type(Type)),
+    typecheck(Flags, Enviroment, Expr, Type).
+
 typecheck_statements(Flags, Enviroment, [Statement | Body]) :-
     add_statement_to_enviroment(Flags, Enviroment, Statement, NewEnviroment),
     typecheck_statements(Flags, NewEnviroment, Body).
