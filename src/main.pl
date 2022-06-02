@@ -3,6 +3,7 @@
 :- use_module(tokenizer).
 :- use_module(parser).
 :- use_module(typechecker).
+:- use_module(intermediate_code).
 
 compile_source_code(File) :-
     open(File, read, In),
@@ -16,4 +17,6 @@ compile_source_code(File) :-
     write(Ast),
     write("\n\n"),
 
-    typecheck(Ast).
+    typecheck(Ast),
+
+    emit_im_code(Ast).
