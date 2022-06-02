@@ -36,18 +36,15 @@ possible_token_strings(
         pair(['w', 'h', 'i', 'l', 'e'], while),
         pair(['e', 'l', 's', 'e'], else),
         pair(['V', 'o', 'i', 'd'], void_type),
-        pair(['f', 'o', 'r'], for), %% unhandeled for now
         pair(['f', 'u', 'n'], fun),
         pair(['I', 'n', 't'], int_type),
         pair(['i', 'f'], if),
-        pair([':', '='], assign), %% unhandeled for now
+        pair([':', '='], assign),
         pair(['<', '='], less_equal),
         pair(['>', '='], greater_equal),
         pair(['!', '='], different),
         pair(['('], open_paren),
         pair([')'], close_paren),
-        pair(['['], open_bracket), %% unhandeled for now
-        pair([']'], close_bracket), %% unhandeled for now
         pair([','], comma),
         pair([':'], colon),
         pair([';'], semicolon),
