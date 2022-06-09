@@ -10,6 +10,11 @@ tokenize_aux([Char | Chars], Tokens) :-
     is_space(Char),
     tokenize_aux(Chars, Tokens).
 
+tokenize_aux(['/', '/' | Chars], Tokens) :-
+    !,
+    consume_comment(Chars, Rest),
+    tokenize_aux(Rest, Tokens).
+
 tokenize_aux(Chars, [Token | Tokens]) :-
     possible_token_strings(TokenStrings),
     find_token(TokenStrings, Chars, Token, Rest),
@@ -68,6 +73,12 @@ find_token([pair(TokenString, Token) | _], String, Token, Rest) :-
 
 find_token([_ | TokenStrings], String, Token, Rest) :-
     find_token(TokenStrings, String, Token, Rest).
+
+consume_comment([Char | Chars], Rest) :-
+    Char \= '\n',
+    consume_comment(Chars, Rest).
+
+consume_comment(['\n' | Chars], Chars).
 
 is_valid_id_char(X) :- is_alnum(X).
 is_valid_id_char('_').
