@@ -1,14 +1,38 @@
 a: Int;
 
-fun foo(var0: Int, var1: Int): Int;
+fun foo(var0: Int, var1: Int): Int
+{
+
+}
 
 fun main(): Int
-  2 + 2;
+{
+  a := 2 + 2 * 2 if foo(42, 69) if 1 else 2 else 3;
 
-  while 2:
+  while a < 2
+  {
     break;
-    2 + 2;;
+    2 < 2 + 4;
+    a := a + 1;
+  }
 
   return a;
 
-  2 + foo((2 * (2 = 2)), (2 * 2 + 2));;
+  b : Int = 2 + foo((2 * (2 = 2)), (2 * 2 + 2));
+
+  if a < b
+  {
+    if b > a
+    {
+      a := b;
+    }
+    else
+    {
+      b := a;
+    }
+  }
+  else
+  {
+    a := 3;
+  }
+}
