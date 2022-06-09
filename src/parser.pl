@@ -91,9 +91,7 @@ parse_body([while | Tokens], Rest, [While | Body]) :-
 parse_body([break, semicolon | Tokens], Rest, [break | Body]) :-
     parse_body(Tokens, Rest, Body).
 
-parse_body([else | Rest], [else | Rest], []).
-
-parse_body([semicolon | Rest], Rest, []).
+parse_body([closed_curly | Rest], Rest, []).
 
 parse_body(Tokens, Rest, [VarDef | Body]) :-
     parse_vardef(Tokens, Tokens1, VarDef),
@@ -119,7 +117,7 @@ parse_vardef(
 parse_defun(
     [identifier(Id), open_paren | Tokens], Rest, defun(Type, Id, Params, Body)
 ) :-
-    parse_param_list(Tokens, [close_paren, colon, Type | Tokens0], Params),
+    parse_param_list(Tokens, [close_paren, colon, Type, open_curly | Tokens0], Params),
     is_valid_type(Type),
     parse_body(Tokens0, Rest, Body).
 
@@ -133,17 +131,17 @@ parse_param_list(
 parse_param_list(Rest, Rest, []).
 
 parse_if(Tokens, Rest, if(Cond, IfTrue, IfFalse)) :-
-    parse_expr(Tokens, [colon | Tokens1], Cond),
+    parse_expr(Tokens, [open_curly | Tokens1], Cond),
     parse_body(Tokens1, Tokens2, IfTrue),
     parse_else(Tokens2, Rest, IfFalse).
 
-parse_else([else | Tokens], Rest, Else) :-
+parse_else([else, open_curly | Tokens], Rest, Else) :-
     parse_body(Tokens, Rest, Else).
 
 parse_else(Rest, Rest, []).
 
 parse_while(Tokens, Rest, while(Cond, Body)) :-
-    parse_expr(Tokens, [colon | Tokens1], Cond),
+    parse_expr(Tokens, [open_curly | Tokens1], Cond),
     parse_body(Tokens1, Rest, Body).
 
 consume_or_ignore(Token, [Token | Rest], Rest).

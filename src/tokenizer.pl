@@ -45,6 +45,8 @@ possible_token_strings(
         pair(['!', '='], different),
         pair(['('], open_paren),
         pair([')'], close_paren),
+        pair(['{'], open_curly),
+        pair(['}'], closed_curly),
         pair([','], comma),
         pair([':'], colon),
         pair([';'], semicolon),
