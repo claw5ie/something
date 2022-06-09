@@ -40,18 +40,18 @@ typecheck(
 
 typecheck(flags(_, in_loop, _), _, break, void_type).
 
-typecheck(_, Enviroment, identifier(Id), Type) :-
+typecheck(_, Enviroment, id(Id), Type) :-
     get_assoc(Id, Enviroment, var_type(Type)).
 
 typecheck(Flags, Enviroment, apply(_, Left, Right), int_type) :-
     typecheck(Flags, Enviroment, Left, int_type),
     typecheck(Flags, Enviroment, Right, int_type).
 
-typecheck(Flags, Enviroment, fun_call(Id, Args), ReturnType) :-
+typecheck(Flags, Enviroment, funcall(Id, Args), ReturnType) :-
     get_assoc(Id, Enviroment, fun_type(ReturnType, ParamTypes)),
     check_arg_types(pair(Flags, Enviroment), Args, ParamTypes).
 
-typecheck(_, _, integer(_), int_type).
+typecheck(_, _, int(_), int_type).
 
 typecheck(_, _, apply(_, Expr), int_type) :-
     typecheck(nothing, Expr, int_type).

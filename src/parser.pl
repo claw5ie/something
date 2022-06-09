@@ -6,8 +6,8 @@ parse_top_level([fun | Tokens], Rest, [Defun | Ast]) :-
     parse_defun(Tokens, Tokens0, Defun),
     parse_top_level(Tokens0, Rest, Ast).
 
-parse_top_level([identifier(Id) | Tokens], Rest, [VarDef | Ast]) :-
-    parse_vardef([identifier(Id) | Tokens], Tokens1, VarDef),
+parse_top_level([id(Id) | Tokens], Rest, [VarDef | Ast]) :-
+    parse_vardef([id(Id) | Tokens], Tokens1, VarDef),
     parse_top_level(Tokens1, Rest, Ast).
 
 parse_top_level([end_of_file], [], []).
@@ -36,18 +36,18 @@ parse_level(6, [open_paren | Tokens], Rest, Ast) :-
 parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
     parse_expr(Tokens, Rest, Ast).
 
-parse_level(6, [integer(Int) | Rest], Rest, integer(Int)).
+parse_level(6, [int(Int) | Rest], Rest, int(Int)).
 
 parse_level(
-    6, [identifier(Id), open_paren, closed_paren | Rest], Rest, fun_call(Id, [])
+    6, [id(Id), open_paren, closed_paren | Rest], Rest, funcall(Id, [])
 ).
 
 parse_level(
-    6, [identifier(Id), open_paren | Tokens], Rest, fun_call(Id, Args)
+    6, [id(Id), open_paren | Tokens], Rest, funcall(Id, Args)
 ) :-
     parse_expr_list(Tokens, [closed_paren | Rest], Args).
 
-parse_level(6, [identifier(Id) | Rest], Rest, identifier(Id)).
+parse_level(6, [id(Id) | Rest], Rest, id(Id)).
 
 fold_exprs(Level, [Op | Tokens], Left, Rest, Result) :-
     op_prec(Op, Level),
@@ -76,7 +76,7 @@ parse_body([return | Tokens], Rest, [return(Expr) | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens0], Expr),
     parse_body(Tokens0, Rest, Body).
 
-parse_body([identifier(Id), assign | Tokens], Rest, [assign(Id, Expr) | Body]) :-
+parse_body([id(Id), assign | Tokens], Rest, [assign(Id, Expr) | Body]) :-
     parse_expr(Tokens, [semicolon | Tokens0], Expr),
     parse_body(Tokens0, Rest, Body).
 
@@ -102,27 +102,27 @@ parse_body(Tokens, Rest, [expr(Expr) | Body]) :-
     parse_body(Tokens1, Rest, Body).
 
 parse_vardef(
-    [identifier(Id), colon, Type, semicolon | Rest],
+    [id(Id), colon, Type, semicolon | Rest],
     Rest,
     vardef(Type, Id)
 ) :-
     type_is_non_void(Type).
 
 parse_vardef(
-    [identifier(Id), colon, Type, equal | Tokens], Rest, vardef(Type, Id, Expr)
+    [id(Id), colon, Type, equal | Tokens], Rest, vardef(Type, Id, Expr)
 ) :-
     type_is_non_void(Type),
     parse_expr(Tokens, [semicolon | Rest], Expr).
 
 parse_defun(
-    [identifier(Id), open_paren | Tokens], Rest, defun(Type, Id, Params, Body)
+    [id(Id), open_paren | Tokens], Rest, defun(Type, Id, Params, Body)
 ) :-
     parse_param_list(Tokens, [closed_paren, colon, Type, open_curly | Tokens0], Params),
     is_valid_type(Type),
     parse_body(Tokens0, Rest, Body).
 
 parse_param_list(
-    [identifier(Id), colon, Type | Tokens], Rest, [param(Type, Id) | Params]
+    [id(Id), colon, Type | Tokens], Rest, [param(Type, Id) | Params]
 ) :-
     type_is_non_void(Type),
     consume_or_ignore(comma, Tokens, Tokens0),

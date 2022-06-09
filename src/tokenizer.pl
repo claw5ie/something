@@ -4,30 +4,30 @@
 
 tokenize(Source, Tokens) :-
     string_chars(Source, Chars),
-    possible_token_strings(TokenStrings),
-    tokenize(TokenStrings, Chars, Tokens).
+    tokenize_aux(Chars, Tokens).
 
-tokenize(TokenStrings, [Char | Chars], Tokens) :-
+tokenize_aux([Char | Chars], Tokens) :-
     is_space(Char),
-    tokenize(TokenStrings, Chars, Tokens).
+    tokenize_aux(Chars, Tokens).
 
-tokenize(TokenStrings, Chars, [Token | Tokens]) :-
+tokenize_aux(Chars, [Token | Tokens]) :-
+    possible_token_strings(TokenStrings),
     find_token(TokenStrings, Chars, Token, Rest),
     !,
-    tokenize(TokenStrings, Rest, Tokens).
+    tokenize_aux(Rest, Tokens).
 
-tokenize(TokenStrings, [Digit | Chars], [integer(Integer) | Tokens]) :-
+tokenize_aux([Digit | Chars], [int(Integer) | Tokens]) :-
     is_digit(Digit),
     take_while(is_digit, Chars, Rest, Digits),
     number_chars(Integer, [Digit | Digits]),
-    tokenize(TokenStrings, Rest, Tokens).
+    tokenize_aux(Rest, Tokens).
 
-tokenize(TokenStrings, [Alpha | Chars], [identifier([Alpha | Alphas]) | Tokens]) :-
+tokenize_aux([Alpha | Chars], [id([Alpha | Alphas]) | Tokens]) :-
     is_alpha(Alpha),
-    take_while(tokenizer:is_alnum_or_underscore, Chars, Rest, Alphas),
-    tokenize(TokenStrings, Rest, Tokens).
+    take_while(tokenizer:is_valid_id_char, Chars, Rest, Alphas),
+    tokenize_aux(Rest, Tokens).
 
-tokenize(_, [], [end_of_file]).
+tokenize_aux([], [end_of_file]).
 
 possible_token_strings(
     [
@@ -69,5 +69,5 @@ find_token([pair(TokenString, Token) | _], String, Token, Rest) :-
 find_token([_ | TokenStrings], String, Token, Rest) :-
     find_token(TokenStrings, String, Token, Rest).
 
-is_alnum_or_underscore(X) :- is_alnum(X).
-is_alnum_or_underscore('_').
+is_valid_id_char(X) :- is_alnum(X).
+is_valid_id_char('_').
