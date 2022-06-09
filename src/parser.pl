@@ -17,7 +17,7 @@ parse_expr(Tokens, Rest, Expr) :-
     parse_inline_if(Tokens0, Rest, PossibleCond, Expr).
 
 parse_inline_if(
-    [if, colon | Tokens], Rest, Cond, inline_if(Cond, IfTrue, IfFalse)
+    [if | Tokens], Rest, Cond, inline_if(Cond, IfTrue, IfFalse)
 ) :-
     parse_expr(Tokens, [else | Tokens0], IfTrue),
     parse_expr(Tokens0, Rest, IfFalse).
