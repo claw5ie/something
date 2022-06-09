@@ -18,5 +18,6 @@ compile_source_code(File) :-
     write("\n\n"),
 
     typecheck(Ast),
+    write("Typechecked successfuly!\n\n"),
 
     emit_im_code(Ast).
