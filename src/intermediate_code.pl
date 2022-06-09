@@ -1,216 +1,253 @@
 :- module(intermediate_code, [emit_im_code/1]).
 
+%% Variables with prefix "T" are temporaries, while variables with
+%% prefix "L" are labels. I don't like abbreviations, but long lines
+%% get annoying after awhile.
+
+%% This predicate takes abstract syntax tree (AST), some info,
+%% destination temporary and returns last unused label.
+%% Info contains the enviroment for temporaries/labels for
+%% variables/functions, first unused temporary, first unused label
+%% and break label (for "break" instruction). In short:
+%% emit_im_code(Expr, info(Env, FirstT, FirstL, BreakL), DestT, LastL).
+%% Temporary 0 is used as garbage temporary (when we want to discard
+%% the result), while -1 is used as invalid label.
 emit_im_code(Ast) :-
-    list_to_assoc([], Enviroment),
-    emit_body(
-        flags(0, 0, -1), Enviroment, Ast
+    list_to_assoc([], Env),
+    emit_stmts(Ast, info(Env, 1, 0, -1), _).
+
+emit_im_code(expr(Expr), Info, DestT, LastL) :-
+    emit_im_code(Expr, Info, DestT, LastL).
+
+emit_im_code(
+    inline_if(Cond, IfTrue, IfFalse),
+    info(Env, CondT, IfFalseL, _),
+    DestT,
+    LastL
+) :-
+    EndL is IfFalseL + 1,
+    LastL0 is IfFalseL + 2,
+    LastT is CondT + 1,
+
+    emit_im_code(
+        Cond,
+        info(Env, LastT, LastL0, -1),
+        CondT,
+        LastL1
+    ),
+    format("    bz       $t~w, l~w\n", [CondT, IfFalseL]),
+    emit_im_code(
+        IfTrue,
+        info(Env, LastT, LastL1, -1),
+        DestT,
+        LastL2
+    ),
+    format("    j        l~w\nl~w:\n", [EndL, IfFalseL]),
+    emit_im_code(
+        IfFalse,
+        info(Env, LastT, LastL2, -1),
+        DestT,
+        LastL
+    ),
+    format("l~w:\n", [EndL]).
+
+emit_im_code(apply(Op, Expr), Info, DestT, LastL) :-
+    emit_im_code(Expr, Info, DestT, LastL),
+    format("    ~|~w~t~8+ ~w t~w, t~w\n", [Op, DestT, DestT]).
+
+emit_im_code(
+    apply(Op, Left, Right),
+    info(Env, LeftT, FirstL, _),
+    DestT,
+    LastL
+) :-
+    LastT is LeftT + 1,
+    emit_im_code(Left, info(Env, LastT, FirstL, -1), LeftT, LastL0),
+    emit_im_code(Right, info(Env, LastT, LastL0, -1), DestT, LastL),
+    format(
+        "    ~|~w~t~8+ $t~w, $t~w, $t~w\n",
+        [Op, DestT, LeftT, DestT]
     ).
 
-emit_im_code(Flags, Enviroment, expr(Expr), Dest) :-
-    emit_im_code(Flags, Enviroment, Expr, Dest).
+emit_im_code(int(Value), info(_, _, LastL, _), DestT, LastL) :-
+    format("    move     $t~w, ~w\n", [DestT, Value]).
 
-emit_im_code(
-    flags(Temp, Label, Labels),
-    Enviroment,
-    inline_if(Cond, IfTrue, IfFalse),
-    Dest
-) :-
-    IfFalseLabel is Label + 1,
-    EndLabel is Label + 2,
-    CondTemp is Temp + 1,
-    emit_im_code(
-        flags(CondTemp, EndLabel, Labels),
-        Enviroment,
-        Cond,
-        CondTemp
-    ),
-    format("    bz       $t~w, l~w\n", [CondTemp, IfFalseLabel]),
-    emit_im_code(
-        flags(CondTemp, EndLabel, Labels),
-        Enviroment,
-        IfTrue,
-        Dest
-    ),
-    format("    j        l~w\nl~w:\n", [EndLabel, IfFalseLabel]),
-    emit_im_code(
-        flags(CondTemp, IfFalseLabel, Labels),
-        Enviroment,
-        IfFalse,
-        Dest
-    ),
-    format("l~w:\n", [EndLabel]).
+emit_im_code(funcall(Id, ExprList), Info, DestT, LastL) :-
+    Info = info(Env, _, _, _),
+    get_assoc(Id, Env, label(VarL)),
+    emit_exprlist(Info, LastL, ExprList, ArgsList),
+    format("    call     $t~w, ~w, l~w\n", [DestT, ArgsList, VarL]).
 
-emit_im_code(
-    Flags,
-    Enviroment,
-    apply(Op, Expr),
-    Dest
-) :-
-    emit_im_code(Flags, Enviroment, Expr, Dest),
-    format("    ~|~w~t~8+ ~w t~w, t~w\n", [Op, Dest, Dest]).
+emit_im_code(id(Id), info(Env, _, LastL, _), DestT, LastL) :-
+    get_assoc(Id, Env, temp(VarT)),
+    format("    move     $t~w, $t~w\n", [DestT, VarT]).
 
-emit_im_code(
-    flags(Temp, Label, Labels),
-    Enviroment,
-    apply(Op, Left, Right),
-    Dest
-) :-
-    LeftTemp is Temp + 1,
-    emit_im_code(
-        flags(LeftTemp, Label, Labels),
-        Enviroment,
-        Left,
-        LeftTemp
-    ),
-    emit_im_code(
-        flags(LeftTemp, Label, Labels),
-        Enviroment,
-        Right,
-        Dest
-    ),
-    format("    ~|~w~t~8+ $t~w, $t~w, $t~w\n", [Op, Dest, LeftTemp, Dest]).
-
-emit_im_code(_, _, integer(Value), Dest) :-
-    format("    move     $t~w, ~w\n", [Dest, Value]).
-
-emit_im_code(Flags, Enviroment, fun_call(Id, ExprList), Dest) :-
-    get_assoc(Id, Enviroment, label(Label)),
-    emit_expr_list(Flags, Enviroment, ExprList, Args),
-    format("    call     $t~w, ~w, l~w\n", [Dest, Args, Label]).
-
-emit_im_code(_, Enviroment, identifier(Id), Dest) :-
-    get_assoc(Id, Enviroment, temp(Temp)),
-    format("    move     $t~w, $t~w\n", [Dest, Temp]).
-
-emit_im_code(_, _, return(), _) :-
+emit_im_code(return(), _, info(_, _, LastL, _), LastL) :-
     format("    ret\n").
 
-emit_im_code(flags(Temp, Label, Labels), Enviroment, return(Expr), _) :-
-    ReturnTemp is Temp + 1,
-    emit_im_code(flags(ReturnTemp, Label, Labels), Enviroment, Expr, ReturnTemp),
-    format("    ret      $t~w\n", [ReturnTemp]).
+emit_im_code(
+    return(Expr),
+    info(Env, ReturnT, FirstL, _),
+    _,
+    LastL
+) :-
+    LastT is ReturnT + 1,
 
-emit_im_code(Flags, Enviroment, assign(Id, Expr), _) :-
-    get_assoc(Id, Enviroment, temp(Dest)),
-    emit_im_code(Flags, Enviroment, Expr, Dest).
+    emit_im_code(
+        Expr, info(Env, LastT, FirstL, -1), ReturnT, LastL
+    ),
+    format("    ret      $t~w\n", [ReturnT]).
+
+emit_im_code(assign(Id, Expr), Info, _, LastL) :-
+    Info = info(Env, _, _, _),
+    get_assoc(Id, Env, temp(DestT)),
+    emit_im_code(Expr, Info, DestT, LastL).
 
 emit_im_code(
-    flags(Temp, Label, Labels),
-    Enviroment,
     if(Cond, IfTrue, IfFalse),
-    _
+    info(Env, CondT, IfFalseL, BreakL),
+    _,
+    LastL
 ) :-
-    IfFalseLabel is Label + 1,
-    EndLabel is Label + 2,
-    CondTemp is Temp + 1,
+    EndL is IfFalseL + 1,
+    LastL0 is IfFalseL + 2,
+
+    LastT is CondT + 1,
     emit_im_code(
-        flags(CondTemp, EndLabel, Labels),
-        Enviroment,
         Cond,
-        CondTemp
+        info(Env, LastT, LastL0, BreakL),
+        CondT,
+        LastL1
     ),
-    format("    bz       $t~w, l~w\n", [CondTemp, IfFalseLabel]),
-    emit_body(
-        flags(CondTemp, EndLabel, Labels),
-        Enviroment,
-        IfTrue
+    format("    bz       $t~w, l~w\n", [CondT, IfFalseL]),
+    emit_stmts(
+        IfTrue,
+        info(Env, LastT, LastL1, BreakL),
+        LastL2
     ),
-    format("    j        l~w\nl~w:\n", [EndLabel, IfFalseLabel]),
-    emit_body(
-        flags(CondTemp, IfFalseLabel, Labels),
-        Enviroment,
-        IfFalse
+    format("    j        l~w\nl~w:\n", [EndL, IfFalseL]),
+    emit_stmts(
+        IfFalse,
+        info(Env, LastT, LastL2, BreakL),
+        LastL
     ),
-    format("l~w:\n", [EndLabel]).
+    format("l~w:\n", [EndL]).
 
-emit_im_code(flags(Temp, Label, _), Enviroment, while(Cond, Body), _) :-
-    StartLabel is Label + 1,
-    CondLabel is Label + 2,
-    BreakLabel is Label + 3,
-    format("    j        l~w\nl~w:\n", [CondLabel, StartLabel]),
-    emit_body(flags(Temp, BreakLabel, BreakLabel), Enviroment, Body),
-    format("l~w:\n", [CondLabel]),
-    CondTemp is Temp + 1,
-    emit_im_code(flags(CondTemp, BreakLabel, -1), Enviroment, Cond, CondTemp),
-    format("    bnz      $t~w, l~w\nl~w:\n", [CondTemp, StartLabel, BreakLabel]).
+emit_im_code(
+    while(Cond, Body),
+    info(Env, CondT, StartL, _),
+    _,
+    LastL
+) :-
+    CondL is StartL + 1,
+    BreakL is StartL + 2,
+    LastL0 is StartL + 3,
 
-emit_im_code(flags(_, _, BreakLabel), _, break, _) :-
-    format("    j        l~w\n", [BreakLabel]).
-
-emit_body(Flags, Enviroment, [Statement | Body]) :-
-    emit_and_add_statement_to_enviroment(
-        Flags, Enviroment, Statement, result(NewFlags, NewEnviroment)
+    %% Reuse "CondT" in the body of the loop, bacause we recompute
+    %% the condition on each iteration.
+    format("    j        l~w\nl~w:\n", [CondL, StartL]),
+    emit_stmts(
+        Body,
+        info(Env, CondT, LastL0, BreakL),
+        LastL1
     ),
-    emit_body(NewFlags, NewEnviroment, Body).
+    format("l~w:\n", [CondL]),
 
-emit_body(_, _, []).
+    LastT is CondT + 1,
 
-emit_and_add_statement_to_enviroment(
-    flags(Temp, Label, Labels),
-    Enviroment,
+    emit_im_code(
+        Cond,
+        info(Env, LastT, LastL1, -1),
+        CondT,
+        LastL
+    ),
+    format(
+        "    bnz      $t~w, l~w\nbl~w:\n", [CondT, StartL, BreakL]
+    ).
+
+emit_im_code(break, info(_, _, LastL, BreakL), _, LastL) :-
+    format("    j        bl~w\n", [BreakL]).
+
+emit_stmts([Statement | Body], Info, LastL) :-
+    emit_stmt_and_update_info(Statement, Info, NewInfo),
+    emit_stmts(Body, NewInfo, LastL).
+
+emit_stmts([], info(_, _, LastL, _), LastL).
+
+emit_stmt_and_update_info(
     vardef(_, Id),
-    result(flags(VarTemp, Label, Labels), NewEnviroment)
+    info(Env, VarT, FirstL, BreakL),
+    info(NewEnv, LastT, FirstL, BreakL)
 ) :-
-    VarTemp is Temp + 1,
-    put_assoc(Id, Enviroment, temp(VarTemp), NewEnviroment).
+    LastT is VarT + 1,
 
-emit_and_add_statement_to_enviroment(
-    flags(Temp, Label, Labels),
-    Enviroment,
+    put_assoc(Id, Env, temp(VarT), NewEnv).
+
+emit_stmt_and_update_info(
     vardef(_, Id, Expr),
-    result(Flags, NewEnviroment)
+    info(Env, VarT, FirstL, BreakL),
+    info(NewEnv, LastT, LastL, BreakL)
 ) :-
-    VarTemp is Temp + 1,
-    Flags = flags(VarTemp, Label, Labels),
-    emit_im_code(Flags, Enviroment, Expr, VarTemp),
-    put_assoc(Id, Enviroment, temp(VarTemp), NewEnviroment).
+    LastT is VarT + 1,
 
-emit_and_add_statement_to_enviroment(
-    flags(Temp, Label, Labels),
-    Enviroment,
+    emit_im_code(
+        Expr, info(Env, LastT, FirstL, BreakL), VarT, LastL
+    ),
+    put_assoc(Id, Env, temp(VarT), NewEnv).
+
+emit_stmt_and_update_info(
     defun(_, Id, Params, Body),
-    result(Flags, NewEnviroment)
+    info(Env, FirstT, FunL, BreakL),
+    info(NewEnv, FirstT, LastL, BreakL)
 ) :-
-    FunLabel is Label + 1,
-    put_assoc(Id, Enviroment, label(FunLabel), Enviroment0),
-    collect_params(Temp, Enviroment0, Params, result(NewTemp, NewEnviroment)),
-    Flags = flags(NewTemp, FunLabel, Labels),
-    format("l~w:\n", FunLabel),
-    emit_body(Flags, Enviroment, Body).
+    LastL0 is FunL + 1,
 
-emit_and_add_statement_to_enviroment(
-    Flags, Enviroment, Statement, result(Flags, Enviroment)
+    put_assoc(Id, Env, label(FunL), NewEnv),
+    collect_params(
+        Params, info(NewEnv, FirstT), info(FunEnv, LastT)
+    ),
+
+    format("l~w:\n", FunL),
+
+    emit_stmts(Body, info(FunEnv, LastT, LastL0, -1), LastL).
+
+emit_stmt_and_update_info(
+    Statement,
+    Info,
+    info(Env, FirstT, LastL, BreakL)
 ) :-
-    emit_im_code(Flags, Enviroment, Statement, -1).
+    Info = info(Env, FirstT, _, BreakL),
+    emit_im_code(Statement, Info, 0, LastL).
 
 collect_params(
-    Temp, Enviroment, [param(_, Id) | Params], Result
+    [param(_, Id) | Params], info(Env, ParamT), NewInfo
 ) :-
-    NewTemp is Temp + 1,
-    put_assoc(Id, Enviroment, temp(NewTemp), NewEnviroment),
-    collect_params(NewTemp, NewEnviroment, Params, Result).
+    LastT is ParamT + 1,
+    put_assoc(Id, Env, temp(ParamT), NewEnv),
+    collect_params(Params, info(NewEnv, LastT), NewInfo).
 
-collect_params(Temp, Enviroment, [], result(Temp, Enviroment)).
+collect_params([], Info, Info).
 
-emit_expr_list(
-    flags(Temp, Label, Labels),
-    Enviroment,
+emit_exprlist(
+    info(Env, ArgT, FirstL, _),
+    LastL,
     [Expr | ExprList],
-    [Arg | Temps]
+    [Arg | ArgList]
 ) :-
-    ArgTemp is Temp + 1,
-    emit_im_code(
-        flags(ArgTemp, Label, Labels),
-        Enviroment,
-        Expr,
-        ArgTemp
-    ),
-    emit_expr_list(
-        flags(ArgTemp, Label, Labels),
-        Enviroment,
-        ExprList,
-        Temps
-    ),
-    atom_concat('$t', ArgTemp, Arg).
+    LastT is ArgT + 1,
 
-emit_expr_list(_, _, [], []).
+    emit_im_code(
+        Expr,
+        info(Env, LastT, FirstL, -1),
+        ArgT,
+        LastL0
+    ),
+    emit_exprlist(
+        info(Env, LastT, LastL0, -1),
+        LastL,
+        ExprList,
+        ArgList
+    ),
+    atom_concat('$t', ArgT, Arg).
+
+emit_exprlist(info(_, _, LastL, _), LastL, [], []).
