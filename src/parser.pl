@@ -31,7 +31,7 @@ parse_level(Level, Tokens, Rest, Ast) :-
     fold_exprs(Level, Tokens0, Left, Rest, Ast).
 
 parse_level(6, [open_paren | Tokens], Rest, Ast) :-
-    parse_expr(Tokens, [close_paren | Rest], Ast).
+    parse_expr(Tokens, [closed_paren | Rest], Ast).
 
 parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
     parse_expr(Tokens, Rest, Ast).
@@ -39,13 +39,13 @@ parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
 parse_level(6, [integer(Int) | Rest], Rest, integer(Int)).
 
 parse_level(
-    6, [identifier(Id), open_paren, close_paren | Rest], Rest, fun_call(Id, [])
+    6, [identifier(Id), open_paren, closed_paren | Rest], Rest, fun_call(Id, [])
 ).
 
 parse_level(
     6, [identifier(Id), open_paren | Tokens], Rest, fun_call(Id, Args)
 ) :-
-    parse_expr_list(Tokens, [close_paren | Rest], Args).
+    parse_expr_list(Tokens, [closed_paren | Rest], Args).
 
 parse_level(6, [identifier(Id) | Rest], Rest, identifier(Id)).
 
@@ -117,7 +117,7 @@ parse_vardef(
 parse_defun(
     [identifier(Id), open_paren | Tokens], Rest, defun(Type, Id, Params, Body)
 ) :-
-    parse_param_list(Tokens, [close_paren, colon, Type, open_curly | Tokens0], Params),
+    parse_param_list(Tokens, [closed_paren, colon, Type, open_curly | Tokens0], Params),
     is_valid_type(Type),
     parse_body(Tokens0, Rest, Body).
 
