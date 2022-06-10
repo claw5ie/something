@@ -1,38 +1,57 @@
-a: Int;
-
-fun foo(var0: Int, var1: Int): Int
+// Recursive fibonnaci
+fun fib_rec(n: Int): Int
 {
-
+  return n <= 0 if 0 else fib_rec(n - 1) + fib_rec(n - 2);
 }
 
-fun main(): Int
+// Iterative fibonnaci
+fun fib_it(n: Int): Int
 {
-  a := 2 + 2 * 2 if foo(42, 69) if 1 else 2 else 3;
+  first: Int = 0;
+  second: Int = 1;
 
-  while a < 2
+  while 1
   {
-    break;
-    2 < 2 + 4;
-    a := a + 1;
+    n := n - 1;
+    next: Int = first + second;
+    first := second;
+    second := next;
+
+   if n <= 0
+   {
+     break;
+   }
   }
 
-  return a;
+  return second;
+}
 
-  b : Int = 2 + foo((2 * (2 = 2)), (2 * 2 + 2));
-
-  if a < b
+// Maximum value between 3 valu
+fun max(x: Int, y: Int, z: Int): Int
+{
+  if (x < y)
   {
-    if b > a
+    if (y < z)
     {
-      a := b;
+      return z;
     }
     else
     {
-      b := a;
+      return y;
     }
   }
   else
   {
-    a := 3;
+    return z > x if z else x;
   }
+}
+
+fun min(x: Int, y: Int): Int
+{
+  if x < y
+  {
+    return x;
+  }
+
+  return y;
 }
