@@ -53,7 +53,7 @@ emit_im_code(
 
 emit_im_code(apply(Op, Expr), Info, DestT, LastL) :-
     emit_im_code(Expr, Info, DestT, LastL),
-    format("    ~|~w~t~8+ ~w t~w, t~w\n", [Op, DestT, DestT]).
+    format("    ~|~w~t~8+ $t~w, $t~w\n", [Op, DestT, DestT]).
 
 emit_im_code(
     apply(Op, Left, Right),

@@ -57,8 +57,8 @@ typecheck(_, _, int(_), int_type).
 
 typecheck(_, _, bool(_), bool_type).
 
-typecheck(_, _, apply(_, Expr), int_type) :-
-    typecheck(nothing, Expr, int_type).
+typecheck(Flags, Enviroment, apply(_, Expr), int_type) :-
+    typecheck(Flags, Enviroment, Expr, int_type).
 
 typecheck(Flags, Enviroment, inline_if(Cond, IfTrue, IfFalse), Type) :-
     typecheck(Flags, Enviroment, Cond, bool_type),
