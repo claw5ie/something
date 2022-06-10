@@ -115,12 +115,8 @@ extract_types_of_params([param(Type, _) | Params], [Type | Types]) :-
 
 extract_types_of_params([], []).
 
-check_arg_types(
-    Info,
-    [Expr | Args],
-    [ExpectedType | ParamTypes]
-) :-
-    typecheck(Expr, Info, ExpectedType),
+check_arg_types(Info, [Arg | Args], [ExpectedType | ParamTypes]) :-
+    typecheck(Arg, Info, ExpectedType),
     check_arg_types(Info, Args, ParamTypes).
 
 check_arg_types(_, [], []).
