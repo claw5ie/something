@@ -20,4 +20,6 @@ compile_source_code(File) :-
     typecheck(Ast),
     write("Typechecked successfuly!\n\n"),
 
-    emit_im_code(Ast).
+    emit_im_code(Ast, ImCode),
+    write(ImCode),
+    write("\n\n").
