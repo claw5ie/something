@@ -1,16 +1,16 @@
-// Recursive fibonnaci
+// Recursive fibonacci.
 fun fib_rec(n: Int): Int
 {
   return n <= 0 if 0 else fib_rec(n - 1) + fib_rec(n - 2);
 }
 
-// Iterative fibonnaci
+// Iterative fibonacci.
 fun fib_it(n: Int): Int
 {
   first: Int = 0;
   second: Int = 1;
 
-  while 1
+  while true
   {
     n := n - 1;
     next: Int = first + second;
@@ -26,12 +26,12 @@ fun fib_it(n: Int): Int
   return second;
 }
 
-// Maximum value between 3 valu
+// Maximum between 3 values.
 fun max(x: Int, y: Int, z: Int): Int
 {
-  if (x < y)
+  if x < y
   {
-    if (y < z)
+    if y < z
     {
       return z;
     }
@@ -46,12 +46,12 @@ fun max(x: Int, y: Int, z: Int): Int
   }
 }
 
-fun min(x: Int, y: Int): Int
+fun is_less(x: Int, y: Int): Bool
 {
   if x < y
   {
-    return x;
+    return true;
   }
 
-  return y;
+  return false;
 }
