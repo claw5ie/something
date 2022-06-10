@@ -86,7 +86,7 @@ emit_im_code(id(Id), info(Env, _, LastL, _), DestT, LastL) :-
     get_assoc(Id, Env, temp(VarT)),
     format("    move     $t~w, $t~w\n", [DestT, VarT]).
 
-emit_im_code(return(), _, info(_, _, LastL, _), LastL) :-
+emit_im_code(return(), info(_, _, LastL, _), _, LastL) :-
     format("    ret\n").
 
 emit_im_code(
