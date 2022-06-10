@@ -12,16 +12,17 @@ typecheck(
     while(Cond, Body),
     void_type
 ) :-
-    typecheck(flags(IsInFun, IsInLoop, ReturnType), Enviroment, Cond, int_type),
+    typecheck(flags(IsInFun, IsInLoop, ReturnType), Enviroment, Cond, bool_type),
     typecheck_statements(flags(IsInFun, in_loop, ReturnType), Enviroment, Body).
 
 typecheck(Flags, Enviroment, if(Cond, IfTrue, IfFalse), void_type) :-
-    typecheck(Flags, Enviroment, Cond, int_type),
+    typecheck(Flags, Enviroment, Cond, bool_type),
     typecheck_statements(Flags, Enviroment, IfTrue),
     typecheck_statements(Flags, Enviroment, IfFalse).
 
-typecheck(Flags, Enviroment, expr(Expr), int_type) :-
-    typecheck(Flags, Enviroment, Expr, int_type).
+typecheck(Flags, Enviroment, expr(Expr), Type) :-
+    typecheck(Flags, Enviroment, Expr, Type),
+    is_non_void(Type).
 
 typecheck(
     flags(in_fun, _, void_type),
@@ -43,9 +44,10 @@ typecheck(flags(_, in_loop, _), _, break, void_type).
 typecheck(_, Enviroment, id(Id), Type) :-
     get_assoc(Id, Enviroment, var_type(Type)).
 
-typecheck(Flags, Enviroment, apply(_, Left, Right), int_type) :-
-    typecheck(Flags, Enviroment, Left, int_type),
-    typecheck(Flags, Enviroment, Right, int_type).
+typecheck(Flags, Enviroment, apply(Op, Left, Right), ExprType) :-
+    typecheck(Flags, Enviroment, Left, OperandType),
+    typecheck(Flags, Enviroment, Right, OperandType),
+    infere_expr_type(Op, OperandType, ExprType).
 
 typecheck(Flags, Enviroment, funcall(Id, Args), ReturnType) :-
     get_assoc(Id, Enviroment, fun_type(ReturnType, ParamTypes)),
@@ -53,11 +55,13 @@ typecheck(Flags, Enviroment, funcall(Id, Args), ReturnType) :-
 
 typecheck(_, _, int(_), int_type).
 
+typecheck(_, _, bool(_), bool_type).
+
 typecheck(_, _, apply(_, Expr), int_type) :-
     typecheck(nothing, Expr, int_type).
 
 typecheck(Flags, Enviroment, inline_if(Cond, IfTrue, IfFalse), Type) :-
-    typecheck(Flags, Enviroment, Cond, int_type),
+    typecheck(Flags, Enviroment, Cond, bool_type),
     typecheck(Flags, Enviroment, IfTrue, Type),
     typecheck(Flags, Enviroment, IfFalse, Type).
 
@@ -126,3 +130,20 @@ check_arg_types(
     check_arg_types(pair(Flags, Enviroment), Args, ParamTypes).
 
 check_arg_types(_, [], []).
+
+is_non_void(bool_type).
+is_non_void(int_type).
+
+infere_expr_type(less_equal, int_type, bool_type).
+infere_expr_type(greater_equal, int_type, bool_type).
+infere_expr_type(different, Type, bool_type) :- is_non_void(Type).
+infere_expr_type(or, bool_type, bool_type).
+infere_expr_type(and, bool_type, bool_type).
+infere_expr_type(equal, Type, bool_type) :- is_non_void(Type).
+infere_expr_type(less, int_type, bool_type).
+infere_expr_type(greater, int_type, bool_type).
+infere_expr_type(plus, int_type, int_type).
+infere_expr_type(minus, int_type, int_type).
+infere_expr_type(multiply, int_type, int_type).
+infere_expr_type(divide, int_type, int_type).
+infere_expr_type(modulus, int_type, int_type).

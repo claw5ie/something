@@ -72,6 +72,10 @@ emit_im_code(
 emit_im_code(int(Value), info(_, _, LastL, _), DestT, LastL) :-
     format("    move     $t~w, ~w\n", [DestT, Value]).
 
+emit_im_code(bool(Bool), info(_, _, LastL, _), DestT, LastL) :-
+    bool_to_int(Bool, Value),
+    format("    movei    $t~w, ~w\n", [DestT, Value]).
+
 emit_im_code(funcall(Id, ExprList), Info, DestT, LastL) :-
     Info = info(Env, _, _, _),
     get_assoc(Id, Env, label(VarL)),
@@ -251,3 +255,6 @@ emit_exprlist(
     atom_concat('$t', ArgT, Arg).
 
 emit_exprlist(info(_, _, LastL, _), LastL, [], []).
+
+bool_to_int(true, 1).
+bool_to_int(false, 0).

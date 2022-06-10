@@ -38,6 +38,8 @@ parse_level(6, [minus | Tokens], Rest, apply(minus, Ast)) :-
 
 parse_level(6, [int(Int) | Rest], Rest, int(Int)).
 
+parse_level(6, [bool(Bool) | Rest], Rest, bool(Bool)).
+
 parse_level(
     6, [id(Id), open_paren, closed_paren | Rest], Rest, funcall(Id, [])
 ).
@@ -149,8 +151,8 @@ consume_or_ignore(_, Rest, Rest).
 
 type_is_non_void(Type) :- Type \= void_type, is_valid_type(Type).
 
+is_valid_type(bool_type).
 is_valid_type(int_type).
-is_valid_type(string_type).
 is_valid_type(void_type).
 
 op_prec(or, 0).

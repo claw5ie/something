@@ -38,8 +38,11 @@ possible_token_strings(
     [
         pair(['r', 'e', 't', 'u', 'r', 'n'], return),
         pair(['b', 'r', 'e', 'a', 'k'], break),
+        pair(['f', 'a', 'l', 's', 'e'], bool(false)),
         pair(['w', 'h', 'i', 'l', 'e'], while),
+        pair(['B', 'o', 'o', 'l'], bool_type),
         pair(['e', 'l', 's', 'e'], else),
+        pair(['t', 'r', 'u', 'e'], bool(true)),
         pair(['V', 'o', 'i', 'd'], void_type),
         pair(['f', 'u', 'n'], fun),
         pair(['I', 'n', 't'], int_type),
