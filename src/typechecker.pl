@@ -19,8 +19,7 @@ typecheck(if(Cond, IfTrue, IfFalse), Info, void_type) :-
     typecheck_statements(IfFalse, Info).
 
 typecheck(expr(Expr), Info, Type) :-
-    typecheck(Expr, Info, Type),
-    is_non_void(Type).
+    typecheck(Expr, Info, Type).
 
 typecheck(return(), info(_, flags(in_fun, _, void_type)), void_type).
 
