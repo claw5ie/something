@@ -1,0 +1,5 @@
+fun foo(): Void
+{
+  break;
+  2 + 2 * 2;
+}
