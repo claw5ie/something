@@ -1,0 +1,15 @@
+a: Int;
+
+fun loop(): Void
+{
+  a := a + 1;
+
+  if a < 100
+  {
+    loop();
+
+    return;
+  }
+
+  return;
+}
