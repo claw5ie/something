@@ -80,5 +80,7 @@ consume_comment([Char | Chars], Rest) :-
 
 consume_comment(['\n' | Chars], Chars).
 
+consume_comment([], []).
+
 is_valid_id_char(X) :- is_alnum(X).
 is_valid_id_char('_').
