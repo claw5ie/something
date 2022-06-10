@@ -12,7 +12,7 @@ fun fib_it(n: Int): Int
 
   while true
   {
-    n := n - 1;
+    n := n + (-1);
     next: Int = first + second;
     first := second;
     second := next;
