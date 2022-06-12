@@ -288,7 +288,7 @@ emit_stmt_and_update_info(
         Params, info(NewEnv, FirstT), info(FunEnv, LastT)
     ),
 
-    BegC = [ label(FunL) | Code0],
+    BegC = [label(FunL) | Code0],
 
     emit_stmts(
         Body,

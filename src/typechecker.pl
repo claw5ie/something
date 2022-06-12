@@ -86,7 +86,9 @@ add_statement_to_enviroment(
     info(EnvFunType, Flags)
 ) :-
     put_defun_in_map(
-        defun(Type, Id, Params), Env, pair(EnvFunType, EnvParamTypes)
+        defun(Type, Id, Params),
+        Env,
+        result(EnvFunType, EnvParamTypes)
     ),
     typecheck_statements(
         Body, info(EnvParamTypes, flags(in_fun, not_in_loop, Type))
@@ -98,7 +100,7 @@ add_statement_to_enviroment(Statement, Info, Info) :-
 put_defun_in_map(
     defun(ReturnType, Id, Params),
     Env,
-    pair(EnvFunType, EnvParamTypes)
+    result(EnvFunType, EnvParamTypes)
 ) :-
     extract_types_of_params(Params, ParamTypes),
     put_assoc(Id, Env, fun_type(ReturnType, ParamTypes), EnvFunType),
