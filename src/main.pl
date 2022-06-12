@@ -9,7 +9,8 @@ compile_source_code(File) :-
     open(File, read, In),
     read_string(In, _, SourceCode),
 
-    tokenize(SourceCode, Tokens),
+    string_chars(SourceCode, Chars),
+    tokenize(Chars, Tokens),
     write(Tokens),
     write("\n\n"),
 

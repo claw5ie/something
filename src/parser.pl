@@ -10,7 +10,7 @@ parse_top_level([id(Id) | Tokens], Rest, [VarDef | Ast]) :-
     parse_vardef([id(Id) | Tokens], Tokens1, VarDef),
     parse_top_level(Tokens1, Rest, Ast).
 
-parse_top_level([end_of_file], [], []).
+parse_top_level([], [], []).
 
 parse_expr(Tokens, Rest, Expr) :-
     parse_level(0, Tokens, Tokens0, PossibleCond),

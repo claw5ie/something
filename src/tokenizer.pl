@@ -2,37 +2,33 @@
 
 :- use_module(utils).
 
-tokenize(Source, Tokens) :-
-    string_chars(Source, Chars),
-    tokenize_aux(Chars, Tokens).
-
-tokenize_aux([Char | Chars], Tokens) :-
+tokenize([Char | Chars], Tokens) :-
     is_space(Char),
-    tokenize_aux(Chars, Tokens).
+    tokenize(Chars, Tokens).
 
-tokenize_aux(['/', '/' | Chars], Tokens) :-
+tokenize(['/', '/' | Chars], Tokens) :-
     !,
     consume_comment(Chars, Rest),
-    tokenize_aux(Rest, Tokens).
+    tokenize(Rest, Tokens).
 
-tokenize_aux(Chars, [Token | Tokens]) :-
+tokenize(Chars, [Token | Tokens]) :-
     possible_token_strings(TokenStrings),
     find_token(TokenStrings, Chars, Token, Rest),
     !,
-    tokenize_aux(Rest, Tokens).
+    tokenize(Rest, Tokens).
 
-tokenize_aux([Digit | Chars], [int(Integer) | Tokens]) :-
+tokenize([Digit | Chars], [int(Integer) | Tokens]) :-
     is_digit(Digit),
     take_while(is_digit, Chars, Rest, Digits),
     number_chars(Integer, [Digit | Digits]),
-    tokenize_aux(Rest, Tokens).
+    tokenize(Rest, Tokens).
 
-tokenize_aux([Alpha | Chars], [id([Alpha | Alphas]) | Tokens]) :-
+tokenize([Alpha | Chars], [id([Alpha | Alphas]) | Tokens]) :-
     is_alpha(Alpha),
     take_while(tokenizer:is_valid_id_char, Chars, Rest, Alphas),
-    tokenize_aux(Rest, Tokens).
+    tokenize(Rest, Tokens).
 
-tokenize_aux([], [end_of_file]).
+tokenize([], []).
 
 possible_token_strings(
     [
